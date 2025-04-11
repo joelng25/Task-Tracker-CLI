@@ -92,10 +92,10 @@ Tasks are stored in a JSON file (tasks.json) in the following format:
 ]
 
 ------------------------------------------------------------------------------------------
-CONTRIBUTING
+FEEDBACK
 ------------------------------------------------------------------------------------------
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Please I would love to hear suggestions from the community!
 
 ------------------------------------------------------------------------------------------
 LICENSE
