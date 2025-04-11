@@ -6,15 +6,26 @@
 #include <vector>
 
 using namespace std;
-
+// Constants
 const string FILE_NAME = "tasks.json";
+const string ID_KEY = "\"id\":";
+const string DESC_KEY = "\"desc\":";
+const string STATUS_KEY = "\"status\":";
+const string UPDATED_KEY = "\"updatedAt\":";
+
+void Usage() {
+  cout << "USAGE: task-cli <command> [arguments]" << endl;
+  exit(1);
+}
 
 int main(int argc, char* argv[]) {
   vector<string> status = {"todo", "in-progress", "done"};
   string createdAt;
   string updatedAt;
 
-  if (argc == 1) return 0;
+  if (argc == 1) Usage();
+
+  bool to_modify = false;  // comprobar modificacion con comando
 
   string command = argv[1];
 
@@ -42,10 +53,10 @@ int main(int argc, char* argv[]) {
     ofstream task_file(FILE_NAME);
   } else {
     while (getline(task_file, line)) {
-      size_t start_id = line.find("\"id\":");    // busca el id en json
+      size_t start_id = line.find(ID_KEY);       // busca el id en json
       size_t end_id = line.find(",", start_id);  // busca el fin id
 
-      size_t start_desc = line.find("\"desc\":") + 8;  // busca inicio desc
+      size_t start_desc = line.find(DESC_KEY) + 8;     // busca inicio desc
       size_t end_desc = line.find("\",", start_desc);  // busca final tarea
 
       if (start_id != string::npos) {
@@ -79,7 +90,7 @@ int main(int argc, char* argv[]) {
 
   // encontrar último ID
   if (counter_task != 0) {
-    size_t lastId = content.rfind("\"id\":");
+    size_t lastId = content.rfind(ID_KEY);
     lastId += 5;
     last_id = stoi(content.substr(lastId, lastId + 1 - lastId));
   }
@@ -125,29 +136,27 @@ int main(int argc, char* argv[]) {
     string id = argv[2];
     string new_desc = argv[3];
 
-    size_t id_pos = content.find("\"id\":" + id);  // busca el id en json
+    size_t id_pos = content.find(ID_KEY + id);  // busca el id en json
     if (id_pos == string::npos) {
       cerr << "ID " << id << " no encontrado." << endl;
       return 1;
     }
-    size_t start_desc = content.find("\"desc\":", id_pos) + 8;  // busca inicio desc
-    size_t end_desc = content.find("\",", start_desc);          // busca final tarea
+    size_t start_desc = content.find(DESC_KEY, id_pos) + 8;  // busca inicio desc
+    size_t end_desc = content.find("\",", start_desc);       // busca final tarea
 
-    size_t start_update = content.find("\"updatedAt\":", end_desc) + 13;  // busca inicio update
-    size_t end_update = content.find("\"", start_update);                 // busca final update
+    size_t start_update = content.find(UPDATED_KEY, end_desc) + 13;  // busca inicio update
+    size_t end_update = content.find("\"", start_update);            // busca final update
 
     content.replace(start_desc, end_desc - start_desc, new_desc);
     content.replace(start_update, end_update - start_update, updatedAt);
 
-    ofstream update_task(FILE_NAME, ios::trunc);
-    update_task << content;
-    update_task.close();
+    to_modify = true;
   }
 
   // comando delete tarea
   else if (command == "delete" and argc == 3) {
     string id = argv[2];
-    size_t id_pos = content.find("\"id\":" + id);  // busca el ID en el json
+    size_t id_pos = content.find(ID_KEY + id);  // busca el ID en el json
     if (id_pos == string::npos) {
       cerr << "ID " << id << " no encontrado." << endl;
       return 1;
@@ -172,19 +181,17 @@ int main(int argc, char* argv[]) {
     content.erase(start_task, end_task - start_task + 1);
 
     // escribe el contenido actualizado al archivo
-    ofstream delete_task(FILE_NAME, ios::trunc);
-    delete_task << content;
-    delete_task.close();
+    to_modify = true;
   }
 
   else if (command == "mark-in-progress" or command == "mark-done") {
     string id = argv[2];
-    size_t id_pos = content.find("\"id\":" + id);  // busca el ID en el json
+    size_t id_pos = content.find(ID_KEY + id);  // busca el ID en el json
     if (id_pos == string::npos) {
       cerr << "ID " << id << " no encontrado." << endl;
       return 1;
     }
-    size_t start_status = content.find("\"status\":", id_pos) + 10;
+    size_t start_status = content.find(STATUS_KEY, id_pos) + 10;
     size_t end_status = content.find("\",", start_status);
 
     if (command == "mark-in-progress") {
@@ -193,9 +200,7 @@ int main(int argc, char* argv[]) {
       content.replace(start_status, end_status - start_status, "done");
     }
 
-    ofstream mark_task(FILE_NAME, ios::trunc);
-    mark_task << content;
-    mark_task.close();
+    to_modify = true;
   }
 
   // comando list task
@@ -222,6 +227,17 @@ int main(int argc, char* argv[]) {
         cout << "ID: " << pair.first << " - " << pair.second << endl;
       }
     }
+  }
+
+  else {
+    Usage();
+  }
+
+  // si se ha modifica algo lo cambia
+  if (to_modify) {
+    ofstream new_task(FILE_NAME, ios::trunc);
+    new_task << content;
+    new_task.close();
   }
 
   return 0;
