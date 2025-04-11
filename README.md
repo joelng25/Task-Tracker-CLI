@@ -1,5 +1,7 @@
 # Task Tracker CLI - README.txt
 
+Thanks to https://roadmap.sh/projects/task-tracker
+
 A simple command-line task management application written in C++. This application allows 
 you to keep track of your tasks by adding, updating, marking status, deleting, and listing them.
 
