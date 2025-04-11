@@ -194,6 +194,11 @@ int main(int argc, char* argv[]) {
     size_t start_status = content.find(STATUS_KEY, id_pos) + 10;
     size_t end_status = content.find("\",", start_status);
 
+    size_t start_update = content.find(UPDATED_KEY, end_status) + 13;  // busca inicio update
+    size_t end_update = content.find("\"", start_update);              // busca final update
+
+    content.replace(start_update, end_update - start_update, updatedAt);
+
     if (command == "mark-in-progress") {
       content.replace(start_status, end_status - start_status, "in-progress");
     } else {
