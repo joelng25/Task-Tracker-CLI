@@ -1,4 +1,4 @@
-# Task Tracker CLI - README.txt
+# Task Tracker CLI
 
 Thanks to https://roadmap.sh/projects/task-tracker
 
