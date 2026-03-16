@@ -30,4 +30,7 @@ test: test_task_manager.cpp task_manager.cpp
 clean:
 	rm -f task-cli test_runner test_tasks.json
 
-.PHONY: help task-cli run-tests clean
+.PHONY: help task-cli run-tests clean tar
+
+tar: clean
+	tar -czf task-tracker-cli-v2.tar.gz *.cc *.h *.hpp Makefile README.md LICENSE tasks.json
