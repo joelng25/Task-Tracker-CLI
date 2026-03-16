@@ -1,7 +1,7 @@
 CXX = g++
 CXXFLAGS = -std=c++17 -Wall -Wextra
 
-all: task-cli test run-tests
+all: task-cli
 
 # Help target
 help:
