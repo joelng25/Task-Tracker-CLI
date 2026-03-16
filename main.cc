@@ -1,249 +1,194 @@
-#include <ctime>
-#include <fstream>
 #include <iostream>
-#include <map>
 #include <string>
-#include <vector>
+
+#include "task_manager.h"
 
 using namespace std;
-// Constants
-const string FILE_NAME = "tasks.json";
-const string ID_KEY = "\"id\":";
-const string DESC_KEY = "\"desc\":";
-const string STATUS_KEY = "\"status\":";
-const string UPDATED_KEY = "\"updatedAt\":";
 
-void Usage() {
-  cout << "USAGE: task-cli <command> [arguments]" << endl;
-  exit(1);
+const string FILE_NAME = "tasks.json";
+
+void displayHelp() {
+  cout << "\n======================================\n";
+  cout << "        TASK CLI - HELP MENU          \n";
+  cout << "======================================\n\n";
+
+  cout << "USAGE:\n";
+  cout << "  ./task-cli <command> [arguments]\n\n";
+
+  cout << "COMMANDS:\n";
+  cout << "  add \"<desc>\"          Add a new task\n";
+  cout << "  update <id> \"<desc>\"  Update an existing task description\n";
+  cout << "  delete <id>           Remove a task\n";
+  cout << "  mark-in-progress <id> Set a task to 'in-progress'\n";
+  cout << "  mark-done <id>        Set a task to 'done'\n\n";
+
+  cout << "LISTING:\n";
+  cout << "  list                  List all tasks\n";
+  cout << "  list todo             List only tasks to be done\n";
+  cout << "  list in-progress      List only tasks currently in progress\n";
+  cout << "  list done             List only completed tasks\n\n";
+
+  cout << "EXAMPLES:\n";
+  cout << "  ./task-cli add \"Finish project report\"\n";
+  cout << "  ./task-cli mark-done 1\n";
+  cout << "======================================\n" << endl;
+}
+
+void displayTask(const Task& task) {
+  cout << "ID: " << task.id << " | Status: " << task.status << " | " << task.desc << endl;
 }
 
 int main(int argc, char* argv[]) {
-  vector<string> status = {"todo", "in-progress", "done"};
-  string createdAt;
-  string updatedAt;
-
-  if (argc == 1) Usage();
-
-  bool to_modify = false;  // comprobar modificacion con comando
+  if (argc == 1) {
+    cerr << "USAGE: task-cli <command> [arguments]" << endl;
+    cerr << "FOR HELP: task-cli help" << endl;
+    return 1;
+  }
 
   string command = argv[1];
+  TaskManager tm(FILE_NAME);
 
-  time_t now = time(0);
-  string dt = ctime(&now);
-  dt.resize(dt.size() - 1);
+  // Help command
+  if (command == "help") {
+    displayHelp();
+    return 0;
+  }
 
-  createdAt = updatedAt = dt;
-  cout << updatedAt << endl;
+  // Add command
+  if (command == "add") {
+    if (argc != 3) {
+      cerr << "Usage: task-cli add \"<description>\"" << endl;
+      return 1;
+    }
 
-  int pos = 0;
-  int last_id = 0;
-  int counter_task = 0;
+    if (!tm.addTask(argv[2])) {
+      cerr << "Error adding task" << endl;
+      return 1;
+    }
 
-  string line;
-  string content;
+    cout << "Task added successfully!" << endl;
+    return 0;
+  }
 
-  map<int, string> all_tasks;
-  map<int, string> todo_tasks;
-  map<int, string> inprogress_tasks;
-  map<int, string> done_tasks;
+  // Update command
+  if (command == "update") {
+    if (argc != 4) {
+      cerr << "Usage: task-cli update <id> \"<description>\"" << endl;
+      return 1;
+    }
 
-  // crea si no existe y escribe al final
-  ifstream task_file(FILE_NAME);
-  if (task_file.fail()) {
-    ofstream task_file(FILE_NAME);
-  } else {
-    while (getline(task_file, line)) {
-      size_t start_id = line.find(ID_KEY);       // busca el id en json
-      size_t end_id = line.find(",", start_id);  // busca el fin id
-
-      size_t start_desc = line.find(DESC_KEY) + 8;     // busca inicio desc
-      size_t end_desc = line.find("\",", start_desc);  // busca final tarea
-
-      if (start_id != string::npos) {
-        int id_num = stoi(line.substr(start_id + 5, end_id - (start_id + 5)));
-
-        string desc_task = line.substr(start_desc, end_desc - start_desc);
-
-        all_tasks[id_num] = desc_task;
-
-        if (line.find("todo") != string::npos) {
-          // añadir tarea a todo list
-          todo_tasks[id_num] = desc_task;
-          ;
-        } else if (line.find("in-progress") != string::npos) {
-          // añadir tarea a inprogress list
-          inprogress_tasks[id_num] = desc_task;
-          ;
-        } else if (line.find("done") != string::npos) {
-          // añadir tarea a done list
-          done_tasks[id_num] = desc_task;
-          ;
-        }
+    try {
+      int id = stoi(argv[2]);
+      if (!tm.updateTask(id, argv[3])) {
+        cerr << "Task with ID " << id << " not found" << endl;
+        return 1;
       }
-
-      content += line + "\n";
-      ++pos;
+      cout << "Task updated successfully!" << endl;
+    } catch (const invalid_argument&) {
+      cerr << "Error: ID must be a number" << endl;
+      return 1;
     }
-    counter_task = pos - 2;
-    task_file.close();
+    return 0;
   }
 
-  // encontrar último ID
-  if (counter_task != 0) {
-    size_t lastId = content.rfind(ID_KEY);
-    lastId += 5;
-    last_id = stoi(content.substr(lastId, lastId + 1 - lastId));
-  }
+  // Delete command
+  if (command == "delete") {
+    if (argc != 3) {
+      cerr << "Usage: task-cli delete <id>" << endl;
+      return 1;
+    }
 
-  // comando añadir tarea
-  if (command == "add" && argc > 2) {
-    string desc = argv[2];
-
-    if (pos == 0) {
-      ofstream first_task(FILE_NAME, ios::app);
-      first_task << "[" << endl;
-
-      first_task << "{\"id\":" << 1 << ", \"desc\":\"" << desc << "\", \"status\":\"" << status[0]
-                 << "\", \"createdAt\":\"" << createdAt << "\", \"updatedAt\":\"" << updatedAt
-                 << "\"}" << endl;
-
-      first_task << "]" << endl;
-      counter_task = 1;
-    } else {
-      size_t end_bracket = content.rfind("]");
-      ofstream new_task(FILE_NAME, ios::trunc);
-      new_task << content.substr(0, end_bracket - 1);
-
-      if (counter_task != 0) {
-        new_task << ",";
+    try {
+      int id = stoi(argv[2]);
+      if (!tm.deleteTask(id)) {
+        cerr << "Task with ID " << id << " not found" << endl;
+        return 1;
       }
-      new_task << endl;
-
-      new_task << "{\"id\":" << last_id + 1 << ", \"desc\":\"" << desc << "\", \"status\":\""
-               << status[0] << "\", \"createdAt\":\"" << createdAt << "\", \"updatedAt\":\""
-               << updatedAt << "\"}" << endl;
-
-      new_task << "]" << endl;
-
-      new_task.close();
-
-      counter_task = pos - 1;
-    }
-  }
-
-  // comando update tarea con nueva descripción
-  else if (command == "update" and argc == 4) {
-    string id = argv[2];
-    string new_desc = argv[3];
-
-    size_t id_pos = content.find(ID_KEY + id);  // busca el id en json
-    if (id_pos == string::npos) {
-      cerr << "ID " << id << " no encontrado." << endl;
+      cout << "Task deleted successfully!" << endl;
+    } catch (const invalid_argument&) {
+      cerr << "Error: ID must be a number" << endl;
       return 1;
     }
-    size_t start_desc = content.find(DESC_KEY, id_pos) + 8;  // busca inicio desc
-    size_t end_desc = content.find("\",", start_desc);       // busca final tarea
-    content.replace(start_desc, end_desc - start_desc, new_desc);
-
-    size_t start_update = content.find(UPDATED_KEY, id_pos) + 13;  // busca inicio update
-    size_t end_update = content.find("\"", start_update);          // busca final update
-    content.replace(start_update, end_update - start_update, updatedAt);
-
-    to_modify = true;
+    return 0;
   }
 
-  // comando delete tarea
-  else if (command == "delete" and argc == 3) {
-    string id = argv[2];
-    size_t id_pos = content.find(ID_KEY + id);  // busca el ID en el json
-    if (id_pos == string::npos) {
-      cerr << "ID " << id << " no encontrado." << endl;
+  // Mark in-progress command
+  if (command == "mark-in-progress") {
+    if (argc != 3) {
+      cerr << "Usage: task-cli mark-in-progress <id>" << endl;
       return 1;
     }
 
-    size_t start_task = content.rfind("{", id_pos);  // encuentra el inicio del objeto
-    size_t end_task = content.find("}", id_pos);     // encuentra el final del objeto
-
-    // ajusta el rango para eliminar correctamente
-    if (content[end_task + 1] == ',') {
-      // si no es el último elemento, incluye la coma
-      end_task += 2;
-    } else if (counter_task != 1) {
-      // si es el último elemento (no único), elimina la coma anterior
-      start_task -= 2;
-    } else {
-      // único elemento
-      ++end_task;
-    }
-
-    // elimina el rango correspondiente
-    content.erase(start_task, end_task - start_task + 1);
-
-    // escribe el contenido actualizado al archivo
-    to_modify = true;
-  }
-
-  else if (command == "mark-in-progress" or command == "mark-done") {
-    string id = argv[2];
-    size_t id_pos = content.find(ID_KEY + id);  // busca el ID en el json
-    if (id_pos == string::npos) {
-      cerr << "ID " << id << " no encontrado." << endl;
+    try {
+      int id = stoi(argv[2]);
+      if (!tm.markInProgress(id)) {
+        cerr << "Task with ID " << id << " not found" << endl;
+        return 1;
+      }
+      cout << "Task marked as in-progress!" << endl;
+    } catch (const invalid_argument&) {
+      cerr << "Error: ID must be a number" << endl;
       return 1;
     }
-    size_t start_status = content.find(STATUS_KEY, id_pos) + 10;
-    size_t end_status = content.find("\",", start_status);
-
-    size_t start_update = content.find(UPDATED_KEY, id_pos) + 13;  // busca inicio update
-    size_t end_update = content.find("\"", start_update);          // busca final update
-
-    if (command == "mark-in-progress") {
-      content.replace(start_status, end_status - start_status, "in-progress");
-    } else {
-      content.replace(start_status, end_status - start_status, "done");
-    }
-
-    content.replace(start_update, end_update - start_update, updatedAt);
-
-    to_modify = true;
+    return 0;
   }
 
-  // comando list task
-  else if (command == "list") {
+  // Mark done command
+  if (command == "mark-done") {
+    if (argc != 3) {
+      cerr << "Usage: task-cli mark-done <id>" << endl;
+      return 1;
+    }
+
+    try {
+      int id = stoi(argv[2]);
+      if (!tm.markDone(id)) {
+        cerr << "Task with ID " << id << " not found" << endl;
+        return 1;
+      }
+      cout << "Task marked as done!" << endl;
+    } catch (const invalid_argument&) {
+      cerr << "Error: ID must be a number" << endl;
+      return 1;
+    }
+    return 0;
+  }
+
+  // List commands
+  if (command == "list") {
+    vector<Task> taskList;
+
     if (argc == 3) {
-      string status_list = argv[2];
-      if (status_list == "todo") {  // list todo
-        for (const auto& pair : todo_tasks) {
-          cout << "ID: " << pair.first << " - " << pair.second << endl;
-        }
-      } else if (status_list == "in-progress") {  // list in-progress
-        for (const auto& pair : inprogress_tasks) {
-          cout << "ID: " << pair.first << " - " << pair.second << endl;
-        }
-      } else if (status_list == "done") {  // list done
-        for (const auto& pair : done_tasks) {
-          cout << "ID: " << pair.first << " - " << pair.second << endl;
-        }
+      string filter = argv[2];
+      if (filter == "todo") {
+        taskList = tm.getTodoTasks();
+      } else if (filter == "in-progress") {
+        taskList = tm.getInProgressTasks();
+      } else if (filter == "done") {
+        taskList = tm.getDoneTasks();
+      } else {
+        cerr << "Unknown filter: " << filter << endl;
+        return 1;
+      }
+    } else if (argc == 2) {
+      taskList = tm.getAllTasks();
+    } else {
+      cerr << "Usage: task-cli list [todo|in-progress|done]" << endl;
+      return 1;
+    }
+
+    if (taskList.empty()) {
+      cout << "No tasks found." << endl;
+    } else {
+      for (const auto& task : taskList) {
+        displayTask(task);
       }
     }
-    // imprime todas las tasks
-    else if (argc == 2) {
-      for (const auto& pair : all_tasks) {
-        cout << "ID: " << pair.first << " - " << pair.second << endl;
-      }
-    }
+    return 0;
   }
 
-  else {
-    Usage();
-  }
-
-  // si se ha modifica algo lo cambia
-  if (to_modify) {
-    ofstream new_task(FILE_NAME, ios::trunc);
-    new_task << content;
-    new_task.close();
-  }
-
-  return 0;
+  // Unknown command
+  cerr << "Unknown command: " << command << endl;
+  cerr << "FOR HELP: task-cli help" << endl;
+  return 1;
 }
