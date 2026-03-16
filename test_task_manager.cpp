@@ -29,7 +29,7 @@ TEST_F(TaskManagerTest, AddFirstTask) {
 
   auto all_tasks = tm.getAllTasks();
   EXPECT_EQ(all_tasks.size(), 1);
-  EXPECT_EQ(all_tasks[1], "Tarea 1");
+  EXPECT_EQ(all_tasks[0].desc, "Tarea 1");
 }
 
 TEST_F(TaskManagerTest, AddMultipleTasks) {
@@ -49,7 +49,7 @@ TEST_F(TaskManagerTest, UpdateTask) {
 
   EXPECT_TRUE(tm.updateTask(1, "Nueva descripción"));
   auto all_tasks = tm.getAllTasks();
-  EXPECT_EQ(all_tasks[1], "Nueva descripción");
+  EXPECT_EQ(all_tasks[0].desc, "Nueva descripción");
 }
 
 TEST_F(TaskManagerTest, UpdateNonExistentTask) {
@@ -80,7 +80,7 @@ TEST_F(TaskManagerTest, MarkTaskInProgress) {
   EXPECT_TRUE(tm.markInProgress(1));
   auto in_progress = tm.getInProgressTasks();
   EXPECT_EQ(in_progress.size(), 1);
-  EXPECT_EQ(in_progress[1], "Tarea en progreso");
+  EXPECT_EQ(in_progress[0].desc, "Tarea en progreso");
 }
 
 // Tests para cambiar estado a done

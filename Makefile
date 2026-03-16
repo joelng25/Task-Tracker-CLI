@@ -1,7 +1,7 @@
 CXX = g++
 CXXFLAGS = -std=c++17 -Wall -Wextra
 
-all: task-cli
+all: task-cli test run-tests
 
 # Help target
 help:
@@ -23,6 +23,9 @@ task-cli: main.cc task_manager.cpp
 # ejecutar tests
 run-tests: test
 	./test_runner
+
+test: test_task_manager.cpp task_manager.cpp
+	$(CXX) $(CXXFLAGS) -o test_runner test_task_manager.cpp task_manager.cpp -lgtest -pthread
 
 clean:
 	rm -f task-cli test_runner test_tasks.json
