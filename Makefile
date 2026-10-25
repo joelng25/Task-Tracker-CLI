@@ -29,8 +29,11 @@ test: test_task_manager.cpp task_manager.cpp
 
 clean:
 	rm -f task-cli test_runner test_tasks.json
+	rm -rf dist
 
 .PHONY: help task-cli run-tests clean tar
 
+# Source package for GitHub Releases (dist/ is not tracked by git)
 tar: clean
-	tar -czf task-tracker-cli-v2.tar.gz *.cc *.h *.hpp Makefile README.md LICENSE tasks.json
+	mkdir -p dist
+	tar -czf dist/task-tracker-cli.tar.gz *.cc *.cpp *.h *.hpp Makefile README.md LICENSE

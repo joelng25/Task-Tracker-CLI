@@ -32,3 +32,12 @@
 *.exe
 *.out
 *.app
+
+# Build output and local data
+task-cli
+test_runner
+tasks.json
+test_tasks.json
+dist/
+*.tar.gz
+.vscode/
