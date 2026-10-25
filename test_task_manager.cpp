@@ -94,6 +94,18 @@ TEST_F(TaskManagerTest, MarkTaskDone) {
 }
 
 // Tests para listar por estado
+TEST_F(TaskManagerTest, MarkTaskBackToTodoIsSaved) {
+  {
+    TaskManager manager(test_file);
+    manager.addTask("Task");
+    manager.markDone(1);
+    EXPECT_TRUE(manager.markTodo(1));
+    EXPECT_FALSE(manager.markTodo(99));
+  }
+  TaskManager reloaded(test_file);
+  EXPECT_EQ(reloaded.findTaskById(1)->status, "todo");
+}
+
 TEST_F(TaskManagerTest, ListTodoTasks) {
   TaskManager tm(test_file);
   tm.addTask("Tarea 1");

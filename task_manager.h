@@ -34,6 +34,7 @@ class TaskManager {
   bool deleteTask(int id);
   bool markInProgress(int id);
   bool markDone(int id);
+  bool markTodo(int id);
 
   // Consultas
   vector<Task> getAllTasks() const;

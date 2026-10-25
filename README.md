@@ -1,5 +1,9 @@
 # Task Tracker CLI
 
+[![CI](https://github.com/joelng25/Task-Tracker-CLI/actions/workflows/ci.yml/badge.svg)](https://github.com/joelng25/Task-Tracker-CLI/actions/workflows/ci.yml)
+
+> The same task engine also powers [Task-Tracker](https://github.com/joelng25/Task-Tracker), a full-stack version with a C++ REST API and a React frontend. Changes to `task_manager.*` are kept in sync between both repos.
+
 Thanks to https://roadmap.sh/projects/task-tracker
 
 A simple command-line task management application written in C++. This application allows 
@@ -21,9 +25,13 @@ INSTALLATION
 
 Clone the repository and build the application:
 
-    git clone https://github.com/yourusername/Task-Tracker-CLI.git
+    git clone https://github.com/joelng25/Task-Tracker-CLI.git
     cd Task-Tracker-CLI
     make
+
+Run the tests (requires GoogleTest):
+
+    make run-tests
 
 ------------------------------------------------------------------------------------------
 USAGE
@@ -46,6 +54,9 @@ Mark a task as in-progress:
 
 Mark a task as done:
     ./task-cli mark-done <id>
+
+Mark a task back as todo:
+    ./task-cli mark-todo <id>
 
 Delete a task:
     ./task-cli delete <id>

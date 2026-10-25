@@ -20,7 +20,8 @@ void displayHelp() {
   cout << "  update <id> \"<desc>\"  Update an existing task description\n";
   cout << "  delete <id>           Remove a task\n";
   cout << "  mark-in-progress <id> Set a task to 'in-progress'\n";
-  cout << "  mark-done <id>        Set a task to 'done'\n\n";
+  cout << "  mark-done <id>        Set a task to 'done'\n";
+  cout << "  mark-todo <id>        Set a task back to 'todo'\n\n";
 
   cout << "LISTING:\n";
   cout << "  list                  List all tasks\n";
@@ -147,6 +148,27 @@ int main(int argc, char* argv[]) {
         return 1;
       }
       cout << "Task marked as done!" << endl;
+    } catch (const invalid_argument&) {
+      cerr << "Error: ID must be a number" << endl;
+      return 1;
+    }
+    return 0;
+  }
+
+  // Mark todo command
+  if (command == "mark-todo") {
+    if (argc != 3) {
+      cerr << "Usage: task-cli mark-todo <id>" << endl;
+      return 1;
+    }
+
+    try {
+      int id = stoi(argv[2]);
+      if (!tm.markTodo(id)) {
+        cerr << "Task with ID " << id << " not found" << endl;
+        return 1;
+      }
+      cout << "Task marked as todo!" << endl;
     } catch (const invalid_argument&) {
       cerr << "Error: ID must be a number" << endl;
       return 1;

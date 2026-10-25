@@ -196,3 +196,15 @@ const Task* TaskManager::findTaskById(int id) const {
   auto it = find_if(tasks.begin(), tasks.end(), [id](const Task& t) { return t.id == id; });
   return it != tasks.end() ? &(*it) : nullptr;
 }
+
+bool TaskManager::markTodo(int id) {
+  Task* task = findTaskById(id);
+  if (!task) {
+    return false;
+  }
+
+  task->status = "todo";
+  task->updatedAt = getCurrentTimestamp();
+  saveTasks();
+  return true;
+}
