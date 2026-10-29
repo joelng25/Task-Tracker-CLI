@@ -1,3 +1,0 @@
-- Fail closed on invalid task storage: never overwrite corrupt input with an empty list.
-- Persist tasks through a sibling temporary file and atomic replacement, rolling back in-memory changes on failure.
-- Use platform-specific atomic replacement on Windows, and run persistence regressions on each release platform.
